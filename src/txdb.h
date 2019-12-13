@@ -21,6 +21,15 @@
 class CBlockIndex;
 class CCoinsViewDBCursor;
 class uint256;
+struct CAddressIndexKey;
+struct CAddressIndexIteratorKey;
+struct CAddressIndexIteratorHeightKey;
+struct CTimestampIndexKey;
+struct CTimestampIndexIteratorKey;
+struct CSpentIndexKey;
+struct CSpentIndexValue;
+struct CAddressUnspentKey;
+struct CAddressUnspentValue;
 
 //! No need to periodic flush if at least this much space still available.
 static constexpr int MAX_BLOCK_COINSDB_USAGE = 10;
@@ -90,6 +99,19 @@ public:
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool EraseAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
+    bool ReadAddressIndex(uint160 addressHash, int type,
+                           std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+                           int start = 0, int end = 0);
+    bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
+    bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
+    bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
+    bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue > >&vect);
+     bool ReadAddressUnspentIndex(uint160 addressHash, int type,
+                                  std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &vect);
+                                  
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindexing);

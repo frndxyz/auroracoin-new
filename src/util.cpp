@@ -109,7 +109,7 @@ public:
     {
         // Init OpenSSL library multithreading support
         ppmutexOpenSSL.reset(new CCriticalSection[CRYPTO_num_locks()]);
-        CRYPTO_set_locking_callback(locking_callback);
+       CRYPTO_set_locking_callback(locking_callback); 
 
         // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
         // We don't use them so we don't require the config. However some of our libs may call functions
@@ -131,7 +131,7 @@ public:
         // Securely erase the memory used by the PRNG
         RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
-        CRYPTO_set_locking_callback(nullptr);
+        CRYPTO_set_locking_callback(nullptr); 
         // Clear the set of locks now to maintain symmetry with the constructor.
         ppmutexOpenSSL.reset();
     }

@@ -119,6 +119,10 @@ static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
+static const bool DEFAULT_ADDRESSINDEX = false;
+static const bool DEFAULT_TIMESTAMPINDEX = false;
+static const bool DEFAULT_SPENTINDEX = false;
+
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
@@ -269,6 +273,18 @@ void ThreadScriptCheck();
 bool IsInitialBlockDownload();
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::Params& params, uint256& hashBlock, bool fAllowSlow = false, CBlockIndex* blockIndex = nullptr);
+
+bool GetAddressIndex(uint160 addressHash, int type,
+                      std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+                      int start = 0, int end = 0);
+                      
+bool GetAddressUnspent(uint160 addressHash, int type,
+                        std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
+
+
+bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes);
+
+bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
 /**
  * Find the best known block, and make it the tip of the block chain
  *
@@ -387,6 +403,13 @@ public:
 
     ScriptError GetScriptError() const { return error; }
 };
+
+
+
+
+
+
+
 
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();

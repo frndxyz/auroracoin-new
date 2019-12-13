@@ -16,7 +16,12 @@
 
 #include <string>
 #include <vector>
-
+#include "chainparams.h"
+#include "key.h"
+#include "pubkey.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "support/allocators/zeroafterfree.h"
 /**
  * Encode a byte sequence as a base58-encoded string.
  * pbegin and pend cannot be nullptr, unless both are.
@@ -57,5 +62,7 @@ bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet);
  * vector (vchRet), return true if decoding is successful
  */
 bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
+
+
 
 #endif // DIGIBYTE_BASE58_H

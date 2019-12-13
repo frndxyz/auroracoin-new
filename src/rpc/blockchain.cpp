@@ -60,7 +60,7 @@ static CUpdatedBlock latestblock;
  */
 double GetDifficulty(const CChain& chain, const CBlockIndex* blockindex, int algo)
 {
-    assert(blockindex);
+    //assert(blockindex);
 
     unsigned int nBits;
     unsigned int powLimit = InitialDifficulty(Params().GetConsensus(), algo);
@@ -526,6 +526,53 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
 
     return mempoolToJSON(fVerbose);
 }
+
+UniValue getblockhashes(const JSONRPCRequest& request)
+ {
+     if (request.fHelp || request.params.size() != 3)
+         throw std::runtime_error(
+             "getblockhashes timestamp\n"
+             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
+             "\nArguments:\n"
+             "1. high         (numeric, required) The newer block timestamp\n"
+             "2. low          (numeric, required) The older block timestamp\n"
+             "3. options      (An object with options\n"
+             "{\n"
+                            "{ noOrphans,  /* default */ false, Will only include blocks on the main chain}, \n"
+                            "{ logicalTimes,  /* default */ false, Will include logical timestamps with hashes }, \n"
+            "}\n"
+             "\nResult:\n"
+             "["
+             "  \"hash\"         (string) The block hash\n"
+             "]"
+             "\nExamples:\n"
+             
+                + HelpExampleCli("getblockhashes", "1231614698 1231024505")
+                + HelpExampleCli("getblockhashes", "1231614698 1231024505 '{\"noOrphans\":false, \"logicalTimes\":true}'")
+                + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
+                
+         );
+
+     unsigned int high = request.params[0].get_int();
+     unsigned int low = request.params[1].get_int();
+//TODO: options params
+
+     std::vector<uint256> blockHashes;
+
+     if (!GetTimestampIndex(high, low, blockHashes)) {
+         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for block hashes");
+     }
+
+     UniValue result(UniValue::VARR);
+     for (std::vector<uint256>::const_iterator it=blockHashes.begin(); it!=blockHashes.end(); it++) {
+         result.push_back(it->GetHex());
+     }
+
+     return result;
+ }
+
+
+
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
 {
@@ -1111,6 +1158,48 @@ UniValue gettxout(const JSONRPCRequest& request)
 
     return ret;
 }
+
+
+
+static UniValue getspentinfo(const JSONRPCRequest& request)
+ {
+
+     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
+         throw std::runtime_error(
+             "getspentinfo\n"
+             "\nReturns the txid and index where an output is spent.\n"
+             "\nResult\n"
+             "{\n"
+             "  \"txid\"  (string) The transaction id\n"
+             "  \"index\"  (number) The spending input index\n"
+             "  ,...\n"
+             "}\n"
+         );
+
+     UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
+     UniValue indexValue = find_value(request.params[0].get_obj(), "index");
+
+     if (!txidValue.isStr() || !indexValue.isNum()) {
+         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid txid or index");
+     }
+
+     uint256 txid = ParseHashV(txidValue, "txid");
+     int outputIndex = indexValue.get_int();
+
+     CSpentIndexKey key(txid, outputIndex);
+     CSpentIndexValue value;
+
+     if (!GetSpentIndex(key, value)) {
+         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to get spent info");
+     }
+
+     UniValue obj(UniValue::VOBJ);
+     obj.pushKV("txid", value.txid.GetHex());
+     obj.pushKV("index", (int)value.inputIndex);
+     obj.pushKV("height", value.blockHeight);
+
+     return obj;
+ }
 
 static UniValue verifychain(const JSONRPCRequest& request)
 {
@@ -2235,11 +2324,13 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
+    { "blockchain",         "getblockhashes",         &getblockhashes,          {"high","low"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
     { "blockchain",         "savemempool",            &savemempool,            {} },
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
+    { "blockchain",         "getspentinfo",           &getspentinfo,           {"txid","index"}  },
 
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
     { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },

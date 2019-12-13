@@ -95,6 +95,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # auroracoin core #
 AURORACOIN_CORE_H = \
+  addressindex.h \
   addrdb.h \
   addrman.h \
   base58.h \
