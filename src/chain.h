@@ -9,8 +9,8 @@
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
-#include <primitives/block.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <tinyformat.h>
 #include <uint256.h>
 
@@ -44,7 +44,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(VARINT(nBlocks));
         READWRITE(VARINT(nSize));
         READWRITE(VARINT(nUndoSize));
@@ -54,114 +55,124 @@ public:
         READWRITE(VARINT(nTimeLast));
     }
 
-     void SetNull() {
-         nBlocks = 0;
-         nSize = 0;
-         nUndoSize = 0;
-         nHeightFirst = 0;
-         nHeightLast = 0;
-         nTimeFirst = 0;
-         nTimeLast = 0;
-     }
+    void SetNull()
+    {
+        nBlocks = 0;
+        nSize = 0;
+        nUndoSize = 0;
+        nHeightFirst = 0;
+        nHeightLast = 0;
+        nTimeFirst = 0;
+        nTimeLast = 0;
+    }
 
-     CBlockFileInfo() {
-         SetNull();
-     }
+    CBlockFileInfo()
+    {
+        SetNull();
+    }
 
-     std::string ToString() const;
+    std::string ToString() const;
 
-     /** update statistics (does not update nSize) */
-     void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn) {
-         if (nBlocks==0 || nHeightFirst > nHeightIn)
-             nHeightFirst = nHeightIn;
-         if (nBlocks==0 || nTimeFirst > nTimeIn)
-             nTimeFirst = nTimeIn;
-         nBlocks++;
-         if (nHeightIn > nHeightLast)
-             nHeightLast = nHeightIn;
-         if (nTimeIn > nTimeLast)
-             nTimeLast = nTimeIn;
-     }
+    /** update statistics (does not update nSize) */
+    void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn)
+    {
+        if (nBlocks == 0 || nHeightFirst > nHeightIn)
+            nHeightFirst = nHeightIn;
+        if (nBlocks == 0 || nTimeFirst > nTimeIn)
+            nTimeFirst = nTimeIn;
+        nBlocks++;
+        if (nHeightIn > nHeightLast)
+            nHeightLast = nHeightIn;
+        if (nTimeIn > nTimeLast)
+            nTimeLast = nTimeIn;
+    }
 };
 
-struct CDiskBlockPos
-{
+struct CDiskBlockPos {
     int nFile;
     unsigned int nPos;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(nPos));
     }
 
-    CDiskBlockPos() {
+    CDiskBlockPos()
+    {
         SetNull();
     }
 
-    CDiskBlockPos(int nFileIn, unsigned int nPosIn) {
+    CDiskBlockPos(int nFileIn, unsigned int nPosIn)
+    {
         nFile = nFileIn;
         nPos = nPosIn;
     }
 
-    friend bool operator==(const CDiskBlockPos &a, const CDiskBlockPos &b) {
+    friend bool operator==(const CDiskBlockPos& a, const CDiskBlockPos& b)
+    {
         return (a.nFile == b.nFile && a.nPos == b.nPos);
     }
 
-    friend bool operator!=(const CDiskBlockPos &a, const CDiskBlockPos &b) {
+    friend bool operator!=(const CDiskBlockPos& a, const CDiskBlockPos& b)
+    {
         return !(a == b);
     }
 
-    void SetNull() { nFile = -1; nPos = 0; }
+    void SetNull()
+    {
+        nFile = -1;
+        nPos = 0;
+    }
     bool IsNull() const { return (nFile == -1); }
 
     std::string ToString() const
     {
         return strprintf("CDiskBlockPos(nFile=%i, nPos=%i)", nFile, nPos);
     }
-
 };
 
-enum BlockStatus: uint32_t {
+enum BlockStatus : uint32_t {
     //! Unused.
-    BLOCK_VALID_UNKNOWN      =    0,
+    BLOCK_VALID_UNKNOWN = 0,
 
     //! Parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
-    BLOCK_VALID_HEADER       =    1,
+    BLOCK_VALID_HEADER = 1,
 
     //! All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
     //! are also at least TREE.
-    BLOCK_VALID_TREE         =    2,
+    BLOCK_VALID_TREE = 2,
 
     /**
      * Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
      * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
      * parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
      */
-    BLOCK_VALID_TRANSACTIONS =    3,
+    BLOCK_VALID_TRANSACTIONS = 3,
 
     //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
     //! Implies all parents are also at least CHAIN.
-    BLOCK_VALID_CHAIN        =    4,
+    BLOCK_VALID_CHAIN = 4,
 
     //! Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
-    BLOCK_VALID_SCRIPTS      =    5,
+    BLOCK_VALID_SCRIPTS = 5,
 
     //! All validity bits.
-    BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
-                                 BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
+    BLOCK_VALID_MASK = BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
+                       BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //!< full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //!< undo data available in rev*.dat
-    BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
+    BLOCK_HAVE_DATA = 8,  //!< full block available in blk*.dat
+    BLOCK_HAVE_UNDO = 16, //!< undo data available in rev*.dat
+    BLOCK_HAVE_MASK = BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
-    BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
+    BLOCK_FAILED_VALID = 32, //!< stage after last reached validness failed
+    BLOCK_FAILED_CHILD = 64, //!< descends from failed block
+    BLOCK_FAILED_MASK = BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
-    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
+    BLOCK_OPT_WITNESS = 128, //!< block data in blk*.data was received with a witness-enforcing client
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -237,11 +248,11 @@ public:
         nSequenceId = 0;
         nTimeMax = 0;
 
-        nVersion       = 0;
+        nVersion = 0;
         hashMerkleRoot = uint256();
-        nTime          = 0;
-        nBits          = 0;
-        nNonce         = 0;
+        nTime = 0;
+        nBits = 0;
+        nNonce = 0;
     }
 
     CBlockIndex()
@@ -253,27 +264,29 @@ public:
     {
         SetNull();
 
-        nVersion       = block.nVersion;
+        nVersion = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
+        nTime = block.nTime;
+        nBits = block.nBits;
+        nNonce = block.nNonce;
     }
 
-    CDiskBlockPos GetBlockPos() const {
+    CDiskBlockPos GetBlockPos() const
+    {
         CDiskBlockPos ret;
         if (nStatus & BLOCK_HAVE_DATA) {
             ret.nFile = nFile;
-            ret.nPos  = nDataPos;
+            ret.nPos = nDataPos;
         }
         return ret;
     }
 
-    CDiskBlockPos GetUndoPos() const {
+    CDiskBlockPos GetUndoPos() const
+    {
         CDiskBlockPos ret;
         if (nStatus & BLOCK_HAVE_UNDO) {
             ret.nFile = nFile;
-            ret.nPos  = nUndoPos;
+            ret.nPos = nUndoPos;
         }
         return ret;
     }
@@ -281,13 +294,13 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.nVersion = nVersion;
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block;
     }
 
@@ -307,7 +320,7 @@ public:
         CBlockHeader block = GetBlockHeader();
         return block.GetAlgo();
     }
-    
+
 
     int64_t GetBlockTime() const
     {
@@ -332,7 +345,7 @@ public:
             *(--pbegin) = pindex->GetBlockTime();
 
         std::sort(pbegin, pend);
-        return pbegin[(pend - pbegin)/2];
+        return pbegin[(pend - pbegin) / 2];
     }
 
     std::string ToString() const
@@ -389,18 +402,21 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
 
-    CDiskBlockIndex() {
+    CDiskBlockIndex()
+    {
         hashPrev = uint256();
     }
 
-    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex)
+    {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         int _nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
@@ -427,12 +443,12 @@ public:
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
+        block.nVersion = nVersion;
+        block.hashPrevBlock = hashPrev;
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block.GetHash();
     }
 
@@ -450,84 +466,91 @@ public:
 
 
 struct CSpentIndexKey {
-     uint256 txid;
-     unsigned int outputIndex;
+    uint256 txid;
+    unsigned int outputIndex;
 
-     ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS;
 
-     template <typename Stream, typename Operation>
-     inline void SerializationOp(Stream& s, Operation ser_action) {
-         READWRITE(txid);
-         READWRITE(outputIndex);
-     }
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(txid);
+        READWRITE(outputIndex);
+    }
 
-     CSpentIndexKey(uint256 t, unsigned int i) {
-         txid = t;
-         outputIndex = i;
-     }
+    CSpentIndexKey(uint256 t, unsigned int i)
+    {
+        txid = t;
+        outputIndex = i;
+    }
 
-     CSpentIndexKey() {
-         SetNull();
-     }
+    CSpentIndexKey()
+    {
+        SetNull();
+    }
 
-     void SetNull() {
-         txid.SetNull();
-         outputIndex = 0;
-     }
+    void SetNull()
+    {
+        txid.SetNull();
+        outputIndex = 0;
+    }
+};
 
- };
-
- struct CSpentIndexValue {
-
-     uint256 txid;
-     unsigned int inputIndex;
-     int blockHeight;
-     CAmount satoshis;
+struct CSpentIndexValue {
+    uint256 txid;
+    unsigned int inputIndex;
+    int blockHeight;
+    CAmount satoshis;
     int addressType;
     uint160 addressHash;
 
-     ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS;
 
-     template <typename Stream, typename Operation>
-     inline void SerializationOp(Stream& s, Operation ser_action) {
-         READWRITE(txid);
-         READWRITE(inputIndex);
-         READWRITE(blockHeight);
-         READWRITE(satoshis);
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(txid);
+        READWRITE(inputIndex);
+        READWRITE(blockHeight);
+        READWRITE(satoshis);
         READWRITE(addressType);
         READWRITE(addressHash);
-     }
+    }
 
-     CSpentIndexValue(uint256 t, unsigned int i, int h, CAmount s, int type, uint160 a) {
-         txid = t;
-         inputIndex = i;
-         blockHeight = h;
-         satoshis = s;
+    CSpentIndexValue(uint256 t, unsigned int i, int h, CAmount s, int type, uint160 a)
+    {
+        txid = t;
+        inputIndex = i;
+        blockHeight = h;
+        satoshis = s;
         addressType = type;
         addressHash = a;
-     }
+    }
 
-     CSpentIndexValue() {
-         SetNull();
-     }
+    CSpentIndexValue()
+    {
+        SetNull();
+    }
 
-     void SetNull() {
-         txid.SetNull();
-         inputIndex = 0;
-         blockHeight = 0;
-         satoshis = 0;
+    void SetNull()
+    {
+        txid.SetNull();
+        inputIndex = 0;
+        blockHeight = 0;
+        satoshis = 0;
         addressType = 0;
         addressHash.SetNull();
-     }
+    }
 
-     bool IsNull() const {
-         return txid.IsNull();
-     }
- };
+    bool IsNull() const
+    {
+        return txid.IsNull();
+    }
+};
 
- struct CSpentIndexKeyCompare
-{
-    bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const {
+struct CSpentIndexKeyCompare {
+    bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const
+    {
         if (a.txid == b.txid) {
             return a.outputIndex < b.outputIndex;
         } else {
@@ -540,27 +563,33 @@ struct CSpentIndexKey {
 struct CTimestampIndexIteratorKey {
     unsigned int timestamp;
 
-    size_t GetSerializeSize() const {
+    size_t GetSerializeSize() const
+    {
         return 4;
     }
-    template<typename Stream>
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         ser_writedata32be(s, timestamp);
     }
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         timestamp = ser_readdata32be(s);
     }
 
-    CTimestampIndexIteratorKey(unsigned int time) {
+    CTimestampIndexIteratorKey(unsigned int time)
+    {
         timestamp = time;
     }
 
-    CTimestampIndexIteratorKey() {
+    CTimestampIndexIteratorKey()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         timestamp = 0;
     }
 };
@@ -569,30 +598,36 @@ struct CTimestampIndexKey {
     unsigned int timestamp;
     uint256 blockHash;
 
-    size_t GetSerializeSize() const {
+    size_t GetSerializeSize() const
+    {
         return 36;
     }
-    template<typename Stream>
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         ser_writedata32be(s, timestamp);
         blockHash.Serialize(s);
     }
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         timestamp = ser_readdata32be(s);
         blockHash.Unserialize(s);
     }
 
-    CTimestampIndexKey(unsigned int time, uint256 hash) {
+    CTimestampIndexKey(unsigned int time, uint256 hash)
+    {
         timestamp = time;
         blockHash = hash;
     }
 
-    CTimestampIndexKey() {
+    CTimestampIndexKey()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         timestamp = 0;
         blockHash.SetNull();
     }
@@ -601,144 +636,166 @@ struct CTimestampIndexKey {
 struct CTimestampBlockIndexKey {
     uint256 blockHash;
 
-    size_t GetSerializeSize() const {
+    size_t GetSerializeSize() const
+    {
         return 32;
     }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         blockHash.Serialize(s);
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         blockHash.Unserialize(s);
     }
 
-    CTimestampBlockIndexKey(uint256 hash) {
+    CTimestampBlockIndexKey(uint256 hash)
+    {
         blockHash = hash;
     }
 
-    CTimestampBlockIndexKey() {
+    CTimestampBlockIndexKey()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         blockHash.SetNull();
     }
 };
 
 struct CTimestampBlockIndexValue {
     unsigned int ltimestamp;
-    size_t GetSerializeSize() const {
+    size_t GetSerializeSize() const
+    {
         return 4;
     }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         ser_writedata32be(s, ltimestamp);
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         ltimestamp = ser_readdata32be(s);
     }
 
-    CTimestampBlockIndexValue (unsigned int time) {
+    CTimestampBlockIndexValue(unsigned int time)
+    {
         ltimestamp = time;
     }
 
-    CTimestampBlockIndexValue() {
+    CTimestampBlockIndexValue()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         ltimestamp = 0;
     }
 };
 
 struct CAddressUnspentKey {
-     unsigned int type;
-     uint160 hashBytes;
-     uint256 txhash;
-     size_t index;
+    unsigned int type;
+    uint160 hashBytes;
+    uint256 txhash;
+    size_t index;
 
-     size_t GetSerializeSize() const {
-         return 57;
-     }
-     template<typename Stream>
-     void Serialize(Stream& s) const {
-         ser_writedata8(s, type);
-         hashBytes.Serialize(s);
-         
-         txhash.Serialize(s);
-         ser_writedata32(s, index);
-     }
-     template<typename Stream>
-     void Unserialize(Stream& s) {
-         type = ser_readdata8(s);
-         hashBytes.Unserialize(s);
-         
-         txhash.Unserialize(s);
-         index = ser_readdata32(s);
-     }
+    size_t GetSerializeSize() const
+    {
+        return 57;
+    }
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ser_writedata8(s, type);
+        hashBytes.Serialize(s);
 
-     CAddressUnspentKey(unsigned int addressType, uint160 addressHash, uint256 txid, size_t indexValue) {
-         type = addressType;
-         hashBytes = addressHash;
-         
-         txhash = txid;
-         index = indexValue;
-     }
+        txhash.Serialize(s);
+        ser_writedata32(s, index);
+    }
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        type = ser_readdata8(s);
+        hashBytes.Unserialize(s);
 
-     CAddressUnspentKey() {
-         SetNull();
-     }
+        txhash.Unserialize(s);
+        index = ser_readdata32(s);
+    }
 
-     void SetNull() {
-         type = 0;
-         hashBytes.SetNull();
-         
-         txhash.SetNull();
-         index = 0;
-     }
- };
+    CAddressUnspentKey(unsigned int addressType, uint160 addressHash, uint256 txid, size_t indexValue)
+    {
+        type = addressType;
+        hashBytes = addressHash;
 
- struct CAddressUnspentValue {
-     CAmount satoshis;
-     CScript script;
-     int blockHeight;
+        txhash = txid;
+        index = indexValue;
+    }
 
-     ADD_SERIALIZE_METHODS;
+    CAddressUnspentKey()
+    {
+        SetNull();
+    }
 
-     template <typename Stream, typename Operation>
-     inline void SerializationOp(Stream& s, Operation ser_action) {
-         READWRITE(satoshis);
-         READWRITE(*(CScriptBase*)(&script));
-         READWRITE(blockHeight);
-     }
+    void SetNull()
+    {
+        type = 0;
+        hashBytes.SetNull();
 
-      CAddressUnspentValue(CAmount sats, CScript scriptPubKey, int height) {
-         satoshis = sats;
-         script = scriptPubKey;
-         blockHeight = height;
-     }
+        txhash.SetNull();
+        index = 0;
+    }
+};
 
-     CAddressUnspentValue() {
-         SetNull();
-     }
+struct CAddressUnspentValue {
+    CAmount satoshis;
+    CScript script;
+    int blockHeight;
 
-     void SetNull() {
-         satoshis = -1;
-         script.clear();
-         blockHeight = 0;
-     }
+    ADD_SERIALIZE_METHODS;
 
-     bool IsNull() const {
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(satoshis);
+        READWRITE(*(CScriptBase*)(&script));
+        READWRITE(blockHeight);
+    }
+
+    CAddressUnspentValue(CAmount sats, CScript scriptPubKey, int height)
+    {
+        satoshis = sats;
+        script = scriptPubKey;
+        blockHeight = height;
+    }
+
+    CAddressUnspentValue()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        satoshis = -1;
+        script.clear();
+        blockHeight = 0;
+    }
+
+    bool IsNull() const
+    {
         return (satoshis == -1);
-     }
-
- };
+    }
+};
 
 
 struct CAddressIndexKey {
@@ -750,12 +807,14 @@ struct CAddressIndexKey {
     size_t index;
     bool spending;
 
-    
-    size_t GetSerializeSize() const {
+
+    size_t GetSerializeSize() const
+    {
         return 66;
     }
-    template<typename Stream >
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         ser_writedata8(s, type);
         hashBytes.Serialize(s);
         // Heights are stored big-endian for key sorting in LevelDB
@@ -766,8 +825,9 @@ struct CAddressIndexKey {
         char f = spending;
         ser_writedata8(s, f);
     }
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         type = ser_readdata8(s);
         hashBytes.Unserialize(s);
         blockHeight = ser_readdata32be(s);
@@ -778,8 +838,8 @@ struct CAddressIndexKey {
         spending = f;
     }
 
-    CAddressIndexKey(unsigned int addressType, uint160 addressHash, int height, int blockindex,
-                     uint256 txid, size_t indexValue, bool isSpending) {
+    CAddressIndexKey(unsigned int addressType, uint160 addressHash, int height, int blockindex, uint256 txid, size_t indexValue, bool isSpending)
+    {
         type = addressType;
         hashBytes = addressHash;
         blockHeight = height;
@@ -789,11 +849,13 @@ struct CAddressIndexKey {
         spending = isSpending;
     }
 
-    CAddressIndexKey() {
+    CAddressIndexKey()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         type = 0;
         hashBytes.SetNull();
         blockHeight = 0;
@@ -802,7 +864,6 @@ struct CAddressIndexKey {
         index = 0;
         spending = false;
     }
-
 };
 
 struct CAddressIndexIteratorKey {
@@ -811,116 +872,130 @@ struct CAddressIndexIteratorKey {
     bool includeHeight;
     int blockHeight;
 
-    size_t GetSerializeSize() const {
-         return 21;
+    size_t GetSerializeSize() const
+    {
+        return 21;
     }
-    template<typename Stream>
-    void Serialize(Stream& s) const {
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
         ser_writedata8(s, type);
         hashBytes.Serialize(s);
-        
     }
-    template<typename Stream>
-    void Unserialize(Stream& s) {
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
         type = ser_readdata8(s);
         hashBytes.Unserialize(s);
     }
 
-    CAddressIndexIteratorKey(unsigned int addressType, uint160 addressHash) {
+    CAddressIndexIteratorKey(unsigned int addressType, uint160 addressHash)
+    {
         type = addressType;
         hashBytes = addressHash;
-        
-     }
+    }
 
-    CAddressIndexIteratorKey() {
-         SetNull();
-     }
-
-     void SetNull() {
-         type = 0;
-         hashBytes.SetNull();
-     }
- };
-
- struct CAddressIndexIteratorHeightKey {
-     unsigned int type;
-     uint160 hashBytes;
-     int blockHeight;
-
-     size_t GetSerializeSize() const {
-         return 25;
-     }
-
-     template<typename Stream>
-     void Serialize(Stream& s) const {
-         ser_writedata8(s, type);
-         hashBytes.Serialize(s);
-         ser_writedata32be(s, blockHeight);
-     }
-
-     template<typename Stream>
-     void Unserialize(Stream& s) {
-         type = ser_readdata8(s);
-         hashBytes.Unserialize(s);
-         blockHeight = ser_readdata32be(s);
-     }
- 
-     CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height) {
-         type = addressType;
-         hashBytes = addressHash;
-         blockHeight = height;
-         
-     }
-
-    CAddressIndexIteratorHeightKey() {
+    CAddressIndexIteratorKey()
+    {
         SetNull();
     }
 
-    void SetNull() {
+    void SetNull()
+    {
         type = 0;
         hashBytes.SetNull();
-         blockHeight = 0;
     }
 };
 
+struct CAddressIndexIteratorHeightKey {
+    unsigned int type;
+    uint160 hashBytes;
+    int blockHeight;
 
+    size_t GetSerializeSize() const
+    {
+        return 25;
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ser_writedata8(s, type);
+        hashBytes.Serialize(s);
+        ser_writedata32be(s, blockHeight);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        type = ser_readdata8(s);
+        hashBytes.Unserialize(s);
+        blockHeight = ser_readdata32be(s);
+    }
+
+    CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height)
+    {
+        type = addressType;
+        hashBytes = addressHash;
+        blockHeight = height;
+    }
+
+    CAddressIndexIteratorHeightKey()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        type = 0;
+        hashBytes.SetNull();
+        blockHeight = 0;
+    }
+};
 
 /** An in-memory indexed chain of blocks. */
-class CChain {
+class CChain
+{
 private:
     std::vector<CBlockIndex*> vChain;
 
 public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
-    CBlockIndex *Genesis() const {
+    CBlockIndex* Genesis() const
+    {
         return vChain.size() > 0 ? vChain[0] : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
-    CBlockIndex *Tip() const {
+    CBlockIndex* Tip() const
+    {
         return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
-    CBlockIndex *operator[](int nHeight) const {
+    CBlockIndex* operator[](int nHeight) const
+    {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return nullptr;
         return vChain[nHeight];
     }
 
     /** Compare two chains efficiently. */
-    friend bool operator==(const CChain &a, const CChain &b) {
+    friend bool operator==(const CChain& a, const CChain& b)
+    {
         return a.vChain.size() == b.vChain.size() &&
                a.vChain[a.vChain.size() - 1] == b.vChain[b.vChain.size() - 1];
     }
 
     /** Efficiently check whether a block is present in this chain. */
-    bool Contains(const CBlockIndex *pindex) const {
+    bool Contains(const CBlockIndex* pindex) const
+    {
         return (*this)[pindex->nHeight] == pindex;
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
-    CBlockIndex *Next(const CBlockIndex *pindex) const {
+    CBlockIndex* Next(const CBlockIndex* pindex) const
+    {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
@@ -928,18 +1003,19 @@ public:
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
-    int Height() const {
+    int Height() const
+    {
         return vChain.size() - 1;
     }
 
     /** Set/initialize a chain with a given tip. */
-    void SetTip(CBlockIndex *pindex);
+    void SetTip(CBlockIndex* pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex *pindex = nullptr) const;
+    CBlockLocator GetLocator(const CBlockIndex* pindex = nullptr) const;
 
     /** Find the last common block between this chain and a block index entry. */
-    const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
+    const CBlockIndex* FindFork(const CBlockIndex* pindex) const;
 
     /** Find the earliest block with timestamp equal or greater than the given. */
     CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;

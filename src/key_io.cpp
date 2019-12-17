@@ -13,12 +13,11 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
+#include <algorithm>
 #include <assert.h>
 #include <string.h>
-#include <algorithm>
 
-namespace
-{
+namespace {
 class DestinationEncoder : public boost::static_visitor<std::string>
 {
 private:
@@ -136,7 +135,7 @@ CKey DecodeSecret(const std::string& str)
     CKey key;
     std::vector<unsigned char> data;
     if (DecodeBase58Check(str, data)) {
-        if(str.at(0) == '6'|| str.at(0) == 'Q') {
+        if (str.at(0) == '6' || str.at(0) == 'Q') {
             const std::vector<unsigned char>& privkey_prefix = Params().Base58Prefix(CChainParams::SECRET_KEY_OLD);
             if ((data.size() == 32 + privkey_prefix.size() || (data.size() == 33 + privkey_prefix.size() && data.back() == 1)) &&
                 std::equal(privkey_prefix.begin(), privkey_prefix.end(), data.begin())) {
@@ -236,27 +235,24 @@ bool IsValidDestinationString(const std::string& str)
     return IsValidDestinationString(str, Params());
 }
 
-bool DecodeIndexKey(const std::string &str, uint160 &hashBytes, int &type)
- {
-     CTxDestination dest = DecodeDestination(str);
-     if (IsValidDestination(dest))
-     {
-         const CKeyID *keyID = boost::get<CKeyID>(&dest);
-         if(keyID)
-         {
-             memcpy(&hashBytes, keyID, 20);
-             type = 1;
-             return true;
-         }
+bool DecodeIndexKey(const std::string& str, uint160& hashBytes, int& type)
+{
+    CTxDestination dest = DecodeDestination(str);
+    if (IsValidDestination(dest)) {
+        const CKeyID* keyID = boost::get<CKeyID>(&dest);
+        if (keyID) {
+            memcpy(&hashBytes, keyID, 20);
+            type = 1;
+            return true;
+        }
 
-         const CScriptID *scriptID = boost::get<CScriptID>(&dest);
-         if(scriptID)
-         {
-             memcpy(&hashBytes, scriptID, 20);
-             type = 2;
-             return true;
-         }
-     }
+        const CScriptID* scriptID = boost::get<CScriptID>(&dest);
+        if (scriptID) {
+            memcpy(&hashBytes, scriptID, 20);
+            type = 2;
+            return true;
+        }
+    }
 
-     return false;
- }
+    return false;
+}

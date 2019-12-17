@@ -13,7 +13,6 @@
  */
 #ifndef DIGIBYTE_BASE58_H
 #define DIGIBYTE_BASE58_H
-
 #include <string>
 #include <vector>
 #include "chainparams.h"
@@ -62,7 +61,5 @@ bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet);
  * vector (vchRet), return true if decoding is successful
  */
 bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
-
-
 
 #endif // DIGIBYTE_BASE58_H

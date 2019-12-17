@@ -40,10 +40,10 @@
 #else
 
 #ifdef _MSC_VER
-#pragma warning(disable:4786)
-#pragma warning(disable:4804)
-#pragma warning(disable:4805)
-#pragma warning(disable:4717)
+#pragma warning(disable : 4786)
+#pragma warning(disable : 4804)
+#pragma warning(disable : 4805)
+#pragma warning(disable : 4717)
 #endif
 
 #ifdef _WIN32_WINNT
@@ -75,16 +75,16 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
-#include <openssl/conf.h>
 #include <thread>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const AURORACOIN_CONF_FILENAME = "auroracoin.conf";
-const char * const AURORACOIN_PID_FILENAME = "auroracoin.pid";
+const char* const AURORACOIN_CONF_FILENAME = "auroracoin.conf";
+const char* const AURORACOIN_PID_FILENAME = "auroracoin.pid";
 
 ArgsManager gArgs;
 
@@ -109,7 +109,7 @@ public:
     {
         // Init OpenSSL library multithreading support
         ppmutexOpenSSL.reset(new CCriticalSection[CRYPTO_num_locks()]);
-       CRYPTO_set_locking_callback(locking_callback); 
+        CRYPTO_set_locking_callback(locking_callback);
 
         // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
         // We don't use them so we don't require the config. However some of our libs may call functions
@@ -131,12 +131,11 @@ public:
         // Securely erase the memory used by the PRNG
         RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
-        CRYPTO_set_locking_callback(nullptr); 
+        CRYPTO_set_locking_callback(nullptr);
         // Clear the set of locks now to maintain symmetry with the constructor.
         ppmutexOpenSSL.reset();
     }
-}
-instance_of_cinit;
+} instance_of_cinit;
 
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
@@ -215,7 +214,8 @@ static bool InterpretBool(const std::string& strValue)
 }
 
 /** Internal helper functions for ArgsManager */
-class ArgsManagerHelper {
+class ArgsManagerHelper
+{
 public:
     typedef std::map<std::string, std::vector<std::string>> MapArgs;
 
@@ -245,7 +245,7 @@ public:
     /** Return true/false if an argument is set in a map, and also
      *  return the first (or last) of the possibly multiple values it has
      */
-    static inline std::pair<bool,std::string> GetArgHelper(const MapArgs& map_args, const std::string& arg, bool getLast = false)
+    static inline std::pair<bool, std::string> GetArgHelper(const MapArgs& map_args, const std::string& arg, bool getLast = false)
     {
         auto it = map_args.find(arg);
 
@@ -264,10 +264,10 @@ public:
      * indicating the argument was found, and the value for the argument
      * if it was found (or the empty string if not found).
      */
-    static inline std::pair<bool,std::string> GetArg(const ArgsManager &am, const std::string& arg)
+    static inline std::pair<bool, std::string> GetArg(const ArgsManager& am, const std::string& arg)
     {
         LOCK(am.cs_args);
-        std::pair<bool,std::string> found_result(false, std::string());
+        std::pair<bool, std::string> found_result(false, std::string());
 
         // We pass "true" to GetArgHelper in order to return the last
         // argument value seen from the command line (so "auroracoind -foo=bar
@@ -300,9 +300,9 @@ public:
     /* Special test for -testnet and -regtest args, because we
      * don't want to be confused by craziness like "[regtest] testnet=1"
      */
-    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
+    static inline bool GetNetBoolArg(const ArgsManager& am, const std::string& net_arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
     {
-        std::pair<bool,std::string> found_result(false,std::string());
+        std::pair<bool, std::string> found_result(false, std::string());
         found_result = GetArgHelper(am.m_override_args, net_arg, true);
         if (!found_result.first) {
             found_result = GetArgHelper(am.m_config_args, net_arg, true);
@@ -348,7 +348,7 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
     if (key.substr(option_index, 2) == "no") {
         bool bool_val = InterpretBool(val);
         key.erase(option_index, 2);
-        if (!bool_val ) {
+        if (!bool_val) {
             // Double negatives like -nofoo=0 are supported (but discouraged)
             LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
             val = "1";
@@ -359,18 +359,20 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
     return false;
 }
 
-ArgsManager::ArgsManager() :
-    /* These options would cause cross-contamination if values for
+ArgsManager::ArgsManager() : /* These options would cause cross-contamination if values for
      * mainnet were used while running on regtest/testnet (or vice-versa).
      * Setting them as section_only_args ensures that sharing a config file
      * between mainnet and regtest/testnet won't cause problems due to these
      * parameters by accident. */
-    m_network_only_args{
-      "-addnode", "-connect",
-      "-port", "-bind",
-      "-rpcport", "-rpcbind",
-      "-wallet",
-    }
+                             m_network_only_args{
+                                 "-addnode",
+                                 "-connect",
+                                 "-port",
+                                 "-bind",
+                                 "-rpcport",
+                                 "-rpcbind",
+                                 "-wallet",
+                             }
 {
     // nothing to do
 }
@@ -529,7 +531,7 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
     if (IsArgNegated(strArg)) return "0";
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
+    std::pair<bool, std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
     if (found_res.first) return found_res.second;
     return strDefault;
 }
@@ -537,7 +539,7 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
     if (IsArgNegated(strArg)) return 0;
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
+    std::pair<bool, std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
     if (found_res.first) return atoi64(found_res.second);
     return nDefault;
 }
@@ -545,7 +547,7 @@ int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
     if (IsArgNegated(strArg)) return false;
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
+    std::pair<bool, std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
     if (found_res.first) return InterpretBool(found_res.second);
     return fDefault;
 }
@@ -600,48 +602,48 @@ std::string ArgsManager::GetHelpMessage() const
     std::string usage = "";
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
-        switch(arg_map.first) {
-            case OptionsCategory::OPTIONS:
-                usage += HelpMessageGroup("Options:");
-                break;
-            case OptionsCategory::CONNECTION:
-                usage += HelpMessageGroup("Connection options:");
-                break;
-            case OptionsCategory::ZMQ:
-                usage += HelpMessageGroup("ZeroMQ notification options:");
-                break;
-            case OptionsCategory::DEBUG_TEST:
-                usage += HelpMessageGroup("Debugging/Testing options:");
-                break;
-            case OptionsCategory::NODE_RELAY:
-                usage += HelpMessageGroup("Node relay options:");
-                break;
-            case OptionsCategory::BLOCK_CREATION:
-                usage += HelpMessageGroup("Block creation options:");
-                break;
-            case OptionsCategory::RPC:
-                usage += HelpMessageGroup("RPC server options:");
-                break;
-            case OptionsCategory::WALLET:
-                usage += HelpMessageGroup("Wallet options:");
-                break;
-            case OptionsCategory::WALLET_DEBUG_TEST:
-                if (show_debug) usage += HelpMessageGroup("Wallet debugging/testing options:");
-                break;
-            case OptionsCategory::CHAINPARAMS:
-                usage += HelpMessageGroup("Chain selection options:");
-                break;
-            case OptionsCategory::GUI:
-                usage += HelpMessageGroup("UI Options:");
-                break;
-            case OptionsCategory::COMMANDS:
-                usage += HelpMessageGroup("Commands:");
-                break;
-            case OptionsCategory::REGISTER_COMMANDS:
-                usage += HelpMessageGroup("Register Commands:");
-                break;
-            default:
-                break;
+        switch (arg_map.first) {
+        case OptionsCategory::OPTIONS:
+            usage += HelpMessageGroup("Options:");
+            break;
+        case OptionsCategory::CONNECTION:
+            usage += HelpMessageGroup("Connection options:");
+            break;
+        case OptionsCategory::ZMQ:
+            usage += HelpMessageGroup("ZeroMQ notification options:");
+            break;
+        case OptionsCategory::DEBUG_TEST:
+            usage += HelpMessageGroup("Debugging/Testing options:");
+            break;
+        case OptionsCategory::NODE_RELAY:
+            usage += HelpMessageGroup("Node relay options:");
+            break;
+        case OptionsCategory::BLOCK_CREATION:
+            usage += HelpMessageGroup("Block creation options:");
+            break;
+        case OptionsCategory::RPC:
+            usage += HelpMessageGroup("RPC server options:");
+            break;
+        case OptionsCategory::WALLET:
+            usage += HelpMessageGroup("Wallet options:");
+            break;
+        case OptionsCategory::WALLET_DEBUG_TEST:
+            if (show_debug) usage += HelpMessageGroup("Wallet debugging/testing options:");
+            break;
+        case OptionsCategory::CHAINPARAMS:
+            usage += HelpMessageGroup("Chain selection options:");
+            break;
+        case OptionsCategory::GUI:
+            usage += HelpMessageGroup("UI Options:");
+            break;
+        case OptionsCategory::COMMANDS:
+            usage += HelpMessageGroup("Commands:");
+            break;
+        case OptionsCategory::REGISTER_COMMANDS:
+            usage += HelpMessageGroup("Register Commands:");
+            break;
+        default:
+            break;
         }
 
         // When we get to the hidden options, stop
@@ -671,13 +673,15 @@ static const int screenWidth = 79;
 static const int optIndent = 2;
 static const int msgIndent = 7;
 
-std::string HelpMessageGroup(const std::string &message) {
+std::string HelpMessageGroup(const std::string& message)
+{
     return std::string(message) + std::string("\n\n");
 }
 
-std::string HelpMessageOpt(const std::string &option, const std::string &message) {
-    return std::string(optIndent,' ') + std::string(option) +
-           std::string("\n") + std::string(msgIndent,' ') +
+std::string HelpMessageOpt(const std::string& option, const std::string& message)
+{
+    return std::string(optIndent, ' ') + std::string(option) +
+           std::string("\n") + std::string(msgIndent, ' ') +
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
            std::string("\n\n");
 }
@@ -737,12 +741,11 @@ static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const fs::path &GetBlocksDir(bool fNetSpecific)
+const fs::path& GetBlocksDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? g_blocks_path_cache_net_specific : g_blocks_path_cached;
+    fs::path& path = fNetSpecific ? g_blocks_path_cache_net_specific : g_blocks_path_cached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -766,12 +769,11 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
     return path;
 }
 
-const fs::path &GetDataDir(bool fNetSpecific)
+const fs::path& GetDataDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
+    fs::path& path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -823,7 +825,7 @@ static std::string TrimString(const std::string& str, const std::string& pattern
     return str.substr(front, end - front + 1);
 }
 
-static bool GetConfigOptions(std::istream& stream, std::string& error, std::vector<std::pair<std::string, std::string>> &options)
+static bool GetConfigOptions(std::istream& stream, std::string& error, std::vector<std::pair<std::string, std::string>>& options)
 {
     std::string str, prefix;
     std::string::size_type pos;
@@ -988,11 +990,10 @@ fs::path GetPidFile()
     return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", AURORACOIN_PID_FILENAME)));
 }
 
-void CreatePidFile(const fs::path &path, pid_t pid)
+void CreatePidFile(const fs::path& path, pid_t pid)
 {
     FILE* file = fsbridge::fopen(path, "w");
-    if (file)
-    {
+    if (file) {
         fprintf(file, "%d\n", pid);
         fclose(file);
     }
@@ -1003,7 +1004,7 @@ bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
     return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
+               MOVEFILE_REPLACE_EXISTING) != 0;
 #else
     int rc = std::rename(src.string().c_str(), dest.string().c_str());
     return (rc == 0);
@@ -1017,8 +1018,7 @@ bool RenameOver(fs::path src, fs::path dest)
  */
 bool TryCreateDirectories(const fs::path& p)
 {
-    try
-    {
+    try {
         return fs::create_directories(p);
     } catch (const fs::filesystem_error&) {
         if (!fs::exists(p) || !fs::is_directory(p))
@@ -1029,7 +1029,7 @@ bool TryCreateDirectories(const fs::path& p)
     return false;
 }
 
-bool FileCommit(FILE *file)
+bool FileCommit(FILE* file)
 {
     if (fflush(file) != 0) { // harmless if redundantly called
         LogPrintf("%s: fflush failed: %d\n", __func__, errno);
@@ -1042,27 +1042,28 @@ bool FileCommit(FILE *file)
         return false;
     }
 #else
-    #if defined(__linux__) || defined(__NetBSD__)
+#if defined(__linux__) || defined(__NetBSD__)
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
         LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
         return false;
     }
-    #elif defined(MAC_OSX) && defined(F_FULLFSYNC)
+#elif defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
         LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
         return false;
     }
-    #else
+#else
     if (fsync(fileno(file)) != 0 && errno != EINVAL) {
         LogPrintf("%s: fsync failed: %d\n", __func__, errno);
         return false;
     }
-    #endif
+#endif
 #endif
     return true;
 }
 
-bool TruncateFile(FILE *file, unsigned int length) {
+bool TruncateFile(FILE* file, unsigned int length)
+{
 #if defined(WIN32)
     return _chsize(_fileno(file), length) == 0;
 #else
@@ -1074,7 +1075,8 @@ bool TruncateFile(FILE *file, unsigned int length) {
  * this function tries to raise the file descriptor limit to the requested number.
  * It returns the actual file descriptor limit (which may be more or less than nMinFD)
  */
-int RaiseFileDescriptorLimit(int nMinFD) {
+int RaiseFileDescriptorLimit(int nMinFD)
+{
 #if defined(WIN32)
     return 2048;
 #else
@@ -1097,7 +1099,8 @@ int RaiseFileDescriptorLimit(int nMinFD) {
  * this function tries to make a particular range of a file allocated (corresponding to disk space)
  * it is advisory, and the range specified in the arguments will never contain live data
  */
-void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
+void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
+{
 #if defined(WIN32)
     // Windows-specific version
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
@@ -1146,8 +1149,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 {
     WCHAR pszPath[MAX_PATH] = L"";
 
-    if(SHGetSpecialFolderPathW(nullptr, pszPath, nFolder, fCreate))
-    {
+    if (SHGetSpecialFolderPathW(nullptr, pszPath, nFolder, fCreate)) {
         return fs::path(pszPath);
     }
 
@@ -1162,7 +1164,7 @@ void runCommand(const std::string& strCommand)
 #ifndef WIN32
     int nErr = ::system(strCommand.c_str());
 #else
-    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
+    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().from_bytes(strCommand).c_str());
 #endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
@@ -1218,8 +1220,8 @@ bool SetupNetworking()
 #ifdef WIN32
     // Initialize Windows Sockets
     WSADATA wsadata;
-    int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
-    if (ret != NO_ERROR || LOBYTE(wsadata.wVersion ) != 2 || HIBYTE(wsadata.wVersion) != 2)
+    int ret = WSAStartup(MAKEWORD(2, 2), &wsadata);
+    if (ret != NO_ERROR || LOBYTE(wsadata.wVersion) != 2 || HIBYTE(wsadata.wVersion) != 2)
         return false;
 #endif
     return true;
